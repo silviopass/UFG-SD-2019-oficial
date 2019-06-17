@@ -53,12 +53,7 @@ def on_disconnet (client, userdata, flags, rc=0):
 
 def on_message(client,userdata,msg):
 	
-	"""
-	ATENÇÃO! VAMOS MODULARIZAR (SEPARAR)
- 	- verificar permissão e capacidade
-	- gravar no db_local (+/-) (atributo: ocupantes)
-	- gravar no db_acessos: id, matricula, data_hora, complexo, predio, andar, catraca_porta, in_out
-	"""
+	#ATENÇÃO! VAMOS MODULARIZAR (SEPARAR)
 
 	# topico e msg recebida
 	topic=msg.topic
@@ -81,25 +76,30 @@ def on_message(client,userdata,msg):
 	data_hora = msg_parse['data_time']
 	tipo_acesso = msg_parse['in_out']
 
-	# reposta para o cliente (catraca). provisório
-	matricula = input (">> ")
-	user = "user:" + str(matricula)
+	# PROVISÓRIO
+	# reposta para o cliente (catraca) e gravação de acesso
 	
-	# Excluir o "replace" (ver documentação do redis-py)  
-	# verifica permissão 
-	if conn.exists(user):    
+	# inicio
+	# cria variável para a chave
+	user = "user:" + str(id_obj)
+	print (user)
+
+	# verifica se existe a chave e se está ativa
+	if conn.exists(user):
 	    ativo = str(conn.hmget(user, 'ativo'))    
 	    ativo = ativo.replace("[b'", '')
 	    ativo = ativo.replace("']", '')
 	    nome = str(conn.hmget(user, 'nome'))
-	    nome = nome.replace("[b'", '')
-	    nome = nome.replace("']", '')
+	    nome = nome.replace("[b'", '') #excluir "replace" (ver documentação do redis-py)	
+	    nome = nome.replace("']", '')  #se não existir outra forma fazer função
 	    if ativo == "S":
 	        retorno1 = 'liberado'        
 	    else:
 	        retorno1 = 'negado'
 	else:
-	    retorno1 = 'não cadastrado'
+	    retorno1 = 'não identificado'
+
+	# verifica local de acesso
 
 
 	# verifica capacidade 
@@ -127,7 +127,7 @@ def on_message(client,userdata,msg):
 	politica = str(conn.hmget(user, 'politica'))    
 	politica = politica.replace("[b'", '')
 	politica = politica.replace("']", '')
-	if politica != 'Administracao':
+	if politica != 'Administracao':   #ajustar para o usuário criar suas próprias politicas
 	    if retorno2 == 'livre':
 	        retorno3 = 'liberado'
 	    else:
@@ -135,58 +135,57 @@ def on_message(client,userdata,msg):
 	else:
 	    retorno3 = 'acesso livre'
 
-
 	# validação
-	if (retorno1 == 'liberado') and (retorno2 == 'livre' or retorno3 == 'acesso_livre'):
-	    acesso = "<<liberado>>"
-	elif (retorno1 == 'liberado') and (retorno2 == 'livre') and (retorno3 == 'liberado'):
-	    acesso = "<<liberado>>"
+	if (retorno1 == 'liberado'):
+	    if retorno2 == 'livre' and retorno3 == 'liberado':
+	        retorno = 'LIBERADO' 
+	    elif retorno2 == 'lotado' and retorno3 == 'acesso livre':
+	        retorno = 'LIBERADO' 
+	    elif retorno2 == 'livre' and retorno3 == 'liberado':
+	        retorno = 'LIBERADO'  
+	    else:
+	        retorno = 'NEGADO' 
 	else:
-	    acesso = "negado"
-
-	print("acesso: ", acesso)
-	print("permissão: ", retorno1)
-	print("capacidade: ", retorno2)
-	print("politica: ", retorno3)
+	    retorno = 'NEGADO'
 
 
+	print("leitura: ", str(id_obj))
+	print("equipamento: ", catraca_porta)
+	print("tipo: ", tipo_acesso)
+	print("acesso: ", retorno)	
+	#print("permissão: ", retorno1)
+	#print("capacidade: ", retorno2)
+	#print("politica: ", retorno3)
+	print("---------------------")
 
-
-
-
-
-
-
-
-
+	# publica para o cliente
+	if 	(retorno1 == 'liberado' or retorno1 == 'negado'):
+		client.publish(topic, nome + " " + retorno)
+	else:
+		client.publish(topic, retorno1)
 
 	# Gravar no Redis: Estrutura mensagem do acesso (se liberado)
-	acesso = {
-				"id": id_msg, 
-				"matricula": id_obj, 
-				"data_hora": data_hora, 
-				"complexo": complexo,
-				"predio": predio,
-				"andar": andar,
-				"catraca_porta": catraca_porta,
-				"tipo_de_acesso": tipo_acesso
-			}
-	# Seta a chave
-	key = "acesso:" + str(id_msg)
-	print ("valor chave =", key)
-	conn.hmset(key, acesso)
+	if retorno == "LIBERADO":		
+		acesso = {
+					"id": id_msg, 
+					"matricula": id_obj, 
+					"data_hora": data_hora, 
+					"complexo": complexo,
+					"predio": predio,
+					"andar": andar,
+					"catraca_porta": catraca_porta,
+					"tipo_de_acesso": tipo_acesso
+				}
+		# Seta a chave
+		key = "acesso:" + str(id_msg)
+		print ("valor chave =", key)
+		conn.hmset(key, acesso)
+ 	
+ 	# Gravar no Redis: ocupantes por andar
+ 	# ?????
 
 
-
-
-
-
-
-
-
-
-
-
+ 	# fim
 
 # instanciando o cliente. 
 client = mqtt.Client (clientname) 
