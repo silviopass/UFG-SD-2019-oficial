@@ -9,7 +9,7 @@
 #### Redis
     pip install redis
 #### Paho MQTT
-    pip install redis 
+    pip install paho-mqtt
 
 
 
