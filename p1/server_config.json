@@ -1,0 +1,11 @@
+{
+	"config":		
+		{
+			"broker": "127.0.0.1",
+			"topic1": "catracas_portas",
+			"topic2": "",
+			"topic3": "",
+			"topic4": "",
+			"hard_name": ""
+		}
+}

@@ -1,0 +1,11 @@
+{
+	"config":		
+		{
+			"broker": "127.0.0.1",
+			"tpc_base": "catracas_portas",
+			"local1": "West-Office",
+			"local2": "Torre_b",
+			"local3": "Andar15",
+			"hard_name": "Catraca02"
+		}
+}
