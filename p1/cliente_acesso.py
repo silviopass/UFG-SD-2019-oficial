@@ -54,9 +54,9 @@ def on_disconnet (client, userdata, flags, rc=0):
 def on_message(client,userdata,msg):
 	topic=msg.topic
 	m_decode=str(msg.payload.decode("utf-8","ignore"))
-	print("msg: ["+str(msg.topic)+"]:", m_decode)
-	print("msg: ", m_decode)
-	print("\n >>")
+	#print("msg: ["+str(msg.topic)+"]:", m_decode)
+	print(m_decode)
+	print(">>")
 
 # instanciando o cliente. 
 client = mqtt.Client (clientname) 
