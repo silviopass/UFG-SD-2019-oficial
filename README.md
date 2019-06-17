@@ -16,7 +16,7 @@
 ## Executar o Redis (servidor de dados)
     redis-server
 
-## Excutar o Mosquitto (é opcional ser for usar broker online)
+## Excutar o Mosquitto (é opcional, ser for usar broker online não é necessário)
     mosquitto  -v
 
 ## Excutar o sever (server mqtt)
