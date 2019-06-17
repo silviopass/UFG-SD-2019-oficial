@@ -37,4 +37,4 @@ politica = {
             "acesso_livre": "S",  
             "limitado_por_capacidade": "N"
         }
-r.hmset("politica:" + politica ['id_politica'], user)
+r.hmset("politica:" + politica ['id_politica'], politica)
