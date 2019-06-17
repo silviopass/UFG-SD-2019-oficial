@@ -23,7 +23,8 @@
     python server.py
 
 ## Excutar o cliente-adm (opcional: apenas para cadastrar usuários, locais e políticas)
-    python cliente-adm.py
+Provisoriamente instanciar manualmente usando o arquivo instanciar.py
+    python instanciar.py
 
 ## Excutar o cliente_acesso (cliente mqtt, faz o papel de catraca ou ponto de acesso)
     python cliente_acesso.py
