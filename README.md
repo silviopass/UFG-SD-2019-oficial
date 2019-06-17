@@ -27,6 +27,7 @@ Siga os passos abaixo para execução
 
 ### Excutar o cliente-adm (opcional: apenas para cadastrar usuários, locais e políticas)
 Provisoriamente instanciar manualmente usando o arquivo 'instanciar.py'
+
     python instanciar.py
 
 ### Excutar o cliente_acesso (cliente mqtt, faz o papel de catraca ou ponto de acesso)
