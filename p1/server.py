@@ -15,9 +15,11 @@ from datetime import datetime
 import redis
 
 # Configurações
+host_redis = 'localhost'
+port_redis = 6379
 nclientname = 'server-'
 clientname = nclientname + (str(randint(1,1000) * randint(0,9999))) 
-# lendo o arquivo JSON e montando as configurações do equipamento. 
+# Lendo o arquivo JSON e montando as configurações do equipamento. 
 try:
 	file_json = open('server_config.json', 'r')
 	dados_json = json.load(file_json)
@@ -25,7 +27,7 @@ try:
 	config_str = json.dumps(config_json)
 	config_parse = json.loads(config_str)
 	
-	# montagem tópicos
+	# Montagem dos tópicos
 	broker = config_parse['broker']
 	tpc1 = config_parse['topic1']
 	tpc =   tpc1 + "/#"  #todos os níveis deste tópico
@@ -33,11 +35,13 @@ try:
 except Exception as erro:
 	print("Falha ao carregar o arquivo")
 	print("Erro: {}".format(erro))
-#
 
 # Instanciando Redis
-conn = redis.Redis(host='localhost', port=6379, db=0)
+conn = redis.Redis(host=host_redis, port=port_redis, db=0)
 
+
+
+# def's
 # Falta tratar as excessões
 def on_log(client, userdata, level, buf):
 	print("log: "+buf)
@@ -51,121 +55,138 @@ def on_connect(client, userdata, flags, rc):
 def on_disconnet (client, userdata, flags, rc=0):
 	print("Desconectado, codigo"+str(rc))	
 
-def on_message(client,userdata,msg):
-	
-	#ATENÇÃO! VAMOS MODULARIZAR (SEPARAR)
 
-	# topico e msg recebida
-	topic=msg.topic
-	m_decode=str(msg.payload.decode("utf-8","ignore"))
-	# print("msg: ["+str(msg.topic)+"]:", m_decode)
+###### REFATORAR (código longo com muitas responsabilidade) ######
+def on_message(client,userdata,msg):		
+
+	# Topico e msg recebida
+	topic = msg.topic
+	m_decode = str(msg.payload.decode("utf-8","ignore"))
 	
-	# parse msg
+	# INICIO 'processa mensagem'
+
+	# Inicio: formata mensagem
 	msg_parse = json.loads(m_decode)
-	
-	# organiza o local (separa tópicos em local)
-	local = str(msg.topic).split('/')
-	complexo =	local[1]
-	predio = local[2]
-	andar = local[3]
-	catraca_porta = local[4]
-
-	# organiza conteúdo da  msg
 	id_msg = msg_parse['id']
 	id_obj = msg_parse['id_obj_pessoa']
 	data_hora = msg_parse['data_time']
 	tipo_acesso = msg_parse['in_out']
 
-	# PROVISÓRIO
-	# reposta para o cliente (catraca) e gravação de acesso
+	tpc_tipo = topic.split("/")[0]
+	complexo = topic.split("/")[1]
+	predio = topic.split("/")[2]
+	andar = topic.split("/")[3]
+	catraca_porta = topic.split("/")[4]
+
+	local_a = complexo +":"+ predio +":"+ andar #leitura equipamento
+	local_read = "local:" + local_a	#monta chave local (lida)	
+	user = "user:" + str(id_obj)	#monta chave usuário (lida)
 	
-	# inicio
-	# cria variável para a chave
-	user = "user:" + str(id_obj)
-	print (user)
-
-	# verifica se existe a chave e se está ativa
-	if conn.exists(user):
-	    ativo = str(conn.hmget(user, 'ativo'))    
-	    ativo = ativo.replace("[b'", '')
-	    ativo = ativo.replace("']", '')
-	    nome = str(conn.hmget(user, 'nome'))
-	    nome = nome.replace("[b'", '') #excluir "replace" (ver documentação do redis-py)	
-	    nome = nome.replace("']", '')  #se não existir outra forma fazer função
-	    if ativo == "S":
-	        retorno1 = 'liberado'        
-	    else:
-	        retorno1 = 'negado'
-	else:
-	    retorno1 = 'não identificado'
-
-	# verifica local de acesso
-
-
-	# verifica capacidade 
-	complexo = "UFG" 
-	predio = "CA-A"
-	andar = "1"
-	local_p = "local"+":"+complexo+":"+predio+":"+andar
-	if conn.exists(local_p) and (retorno1 == 'liberado'):
-	    capacidade = str(conn.hmget(local_p, 'capacidade'))
-	    capacidade = capacidade.replace("[b'", '')
-	    capacidade = capacidade.replace("']", '')
-	    capacidade = int(capacidade)
-	    ocupantes = str(conn.hmget(local_p, 'ocupantes'))
-	    ocupantes = ocupantes.replace("[b'", '')
-	    ocupantes = ocupantes.replace("']", '')
-	    ocupantes = int(ocupantes)
-	    if (capacidade == ocupantes):
-	        retorno2 = 'lotado'
-	    else:
-	        retorno2 = 'livre'
-	else:
-	    retorno2 = 'nao encontrado'
-
-	# verifica política
-	politica = str(conn.hmget(user, 'politica'))    
-	politica = politica.replace("[b'", '')
-	politica = politica.replace("']", '')
-	if politica != 'Administracao':   #ajustar para o usuário criar suas próprias politicas
-	    if retorno2 == 'livre':
-	        retorno3 = 'liberado'
-	    else:
-	        retorno3 = 'lotado'
-	else:
-	    retorno3 = 'acesso livre'
-
-	# validação
-	if (retorno1 == 'liberado'):
-	    if retorno2 == 'livre' and retorno3 == 'liberado':
-	        retorno = 'LIBERADO' 
-	    elif retorno2 == 'lotado' and retorno3 == 'acesso livre':
-	        retorno = 'LIBERADO' 
-	    elif retorno2 == 'livre' and retorno3 == 'liberado':
-	        retorno = 'LIBERADO'  
-	    else:
-	        retorno = 'NEGADO' 
-	else:
-	    retorno = 'NEGADO'
-
-
-	print("leitura: ", str(id_obj))
+	print("\n** LEITURA **")
+	print(local_read, user)
+	print("tipo: ", tpc_tipo)
+	print("complexo: ", complexo)
+	print("predio: ", predio)
+	print("andar: ", andar)
 	print("equipamento: ", catraca_porta)
-	print("tipo: ", tipo_acesso)
-	print("acesso: ", retorno)	
-	#print("permissão: ", retorno1)
-	#print("capacidade: ", retorno2)
-	#print("politica: ", retorno3)
-	print("---------------------")
+	print("conteudo (msg): ", id_msg, id_obj, data_hora, tipo_acesso, "\n")
+	
+	# Fim: formata mensagem
 
-	# publica para o cliente
-	if 	(retorno1 == 'liberado' or retorno1 == 'negado'):
-		client.publish(topic, nome + " " + retorno)
+	# CÓDIGOS DE RESPOSTAS
+	resposta = {
+            "000": "LIBERADO", 
+            "001": "BLOQUEADO: usuário inativo!", 
+            "002": "BLOQUEADO: local cheio!",
+            "003": "BLOQUEADO: local não permitido",
+            "201": "ERRO: politica não cadastrada!", 
+            "202": "ERRO: local não cadastrado!",
+            "203": "ERRO: usuário não cadastrado!"
+        }
+
+	# Verificação 1: verifica se local está no bd
+	if conn.exists(local_read):
+		test_local = 0 
 	else:
-		client.publish(topic, retorno1)
+	    test_local = 1 # erro: local não cadastrado
+	
+	# Verificação 2: verifica se user existe e está ativo no bd
+	if conn.exists(user):	#verifica a chave se existe
+		# verifica se usuário está ativo
+		ativo = ((conn.hmget(user, 'ativo'))[0]).decode('utf-8')
+		nome = ((conn.hmget(user, 'nome'))[0]).decode('utf-8') 
+		local_cad = ((conn.hmget(user, 'complexo'))[0]).decode('utf-8') +":"+ ((conn.hmget(user, 'predio'))[0]).decode('utf-8') +":"+ ((conn.hmget(user, 'andar'))[0]).decode('utf-8')
+		if ativo == "S": 
+			test_ativo = 0
+		else: 
+			test_ativo = 1			
+	else:
+	    test_ativo = 1 # não localizado
+	    client.publish(topic, resposta['203'])
+	
+	# Verificação 3: capacidade
+	if test_local == 0: #positivo
+		capacidade = int(((conn.hmget(local_read, 'capacidade'))[0]).decode('utf-8'))
+		ocupantes = int(((conn.hmget(local_read, 'ocupantes'))[0]).decode('utf-8'))
+		if capacidade > ocupantes:
+			test_capacidade = 0
+		else:
+			test_capacidade = 1
+	
+	# Verificação 4: política	
+	politica = "politica:"+((conn.hmget(user, 'politica'))[0]).decode('utf-8')
+	if conn.exists(politica):	#verifica a chave se existe
+		test_politica = 0
+		acesso_livre = ((conn.hmget(politica, 'acesso_livre'))[0]).decode('utf-8')
+		limitado_por_capacidade = ((conn.hmget(politica, 'limitado_por_capacidade'))[0]).decode('utf-8')
+	else:
+		test_politica = 1
+	
+	# Validação (verificação 1 a 4)
+	if	test_local == 0: 					#existência de local
+		if test_ativo == 0: 				#existencia de usuario (ativo)
+			if test_politica == 0: 			#existencia de politica
+				if 	acesso_livre == "S" and limitado_por_capacidade == "N":
+					retorno = resposta['000']
+				elif acesso_livre == "S" and limitado_por_capacidade == "S":
+					if test_capacidade == 0:						
+						retorno = resposta['001']
+					else:
+						retorno = resposta['002'] 
+				elif acesso_livre == "N" and limitado_por_capacidade == "N":
+					if local_a == local_cad:
+						retorno = resposta['000']
+					else:
+						retorno = resposta['003']
+				elif acesso_livre == "N" and limitado_por_capacidade == "S":
+					if local_a == local_cad:
+						if test_capacidade == 0:
+							retorno = resposta['000']
+						else:
+							retorno = resposta['002']
+					else:
+						retorno = resposta['003']
+				else:
+					retorno = ""
+			else:
+				retorno = resposta['201']	
+		else:
+			retorno = resposta['001']
+	else:
+		retorno = resposta['202']
 
-	# Gravar no Redis: Estrutura mensagem do acesso (se liberado)
-	if retorno == "LIBERADO":		
+	# ----------------------
+	# FIM 'processa mensagem'
+
+	
+	# Envia resposta
+	if len(retorno) > 1:		
+		client.publish(topic, retorno)
+	else:
+		client.publish(topic, "SEM RESPOSTA")
+
+	# Se liberado atualiza os acessos e numero de ocupantes do andar
+	if retorno == resposta['000']:		
 		acesso = {
 					"id": id_msg, 
 					"matricula": id_obj, 
@@ -176,28 +197,37 @@ def on_message(client,userdata,msg):
 					"catraca_porta": catraca_porta,
 					"tipo_de_acesso": tipo_acesso
 				}
-		# Seta a chave
-		key = "acesso:" + str(id_msg)
+		# Adiciona acesso
+		key = "acesso:" + str(id_obj) +":"+ str(id_msg)
 		print ("valor chave =", key)
 		conn.hmset(key, acesso)
- 	
- 	# Gravar no Redis: ocupantes por andar
- 	# ?????
+		
+		# Atualiza o numero de ocupantes do andar
+		tp = tipo_acesso
+		update_local = "local:" + acesso ['complexo'] + ":" + acesso ['predio'] + ":" + acesso ['andar']
+		update_chave = 'ocupantes'
+		if tp == "in": 
+			update_valor = 1
+		else:
+			update_valor = -1		
+		conn.hincrby(update_local, update_chave, update_valor)
+
+		# gerar alerta de andar com capacidade exedida - fazer loop monitorar/ prédio e andar	
+		# criar topico alertas e publicar (em cliente-monitor?)
 
 
- 	# fim
 
-# instanciando o cliente. 
+# Instanciando o cliente mqtt
 client = mqtt.Client (clientname) 
 client.on_connect=on_connect
 client.on_disconnet=on_disconnet
 client.on_message=on_message
 print("\nConectado ao broker: ", broker)
 
-# conectar ao broker
+# Conecta ao broker
 client.connect(broker)
 
-# se inscreve no tópico para receber reposta do server (via broker) 
+# Assina o tópico para receber reposta do broker 
 client.subscribe(str(tpc))
 
 # inicia loop
