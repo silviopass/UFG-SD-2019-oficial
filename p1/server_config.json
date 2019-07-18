@@ -1,7 +1,7 @@
 {
 	"config":		
 		{
-			"broker": "127.0.0.1",
+			"broker": "test.mosquitto.org",
 			"topic1": "catracas_portas",
 			"topic2": "",
 			"topic3": "",
