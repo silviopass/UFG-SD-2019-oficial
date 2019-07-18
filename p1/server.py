@@ -1,3 +1,7 @@
+    
+#!/usr/bin/python
+# -- coding: utf-8 --
+
 """
 UFG-INF-Sistemas Distribuidos
 Cliente MQTT usando o paho - funciona como server
