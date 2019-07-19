@@ -239,7 +239,7 @@ client.loop_start()
 
 # Tempo conexão .
 #parar loop
-time.sleep(1000) 
+time.sleep(999999) 
 client.loop_stop()
 #desconetar cliente
 client.disconnect()
