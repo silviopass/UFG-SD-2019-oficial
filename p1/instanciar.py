@@ -8,21 +8,45 @@ r = redis.Redis(host='localhost', port=6379, db=0)
 # Adequar o 'cliente_adm.py' para salvar no 'Redis' com essa estrutura.
 
 # instanciando local
-local = {"id_local": "1", "complexo": "UFG", "predio": "CA-A", "andar": "1", "capacidade": 100, "ocupantes": 0}
+local = {"id_local": "1", "complexo": "UFG", "predio": "CA-A", "andar": "1", "capacidade": 10, "ocupantes": 0}
 r.hmset("local:"+local['complexo']+":"+local['predio']+":"+local['andar'],local)
-local = {"id_local": "2", "complexo": "UFG", "predio": "CA-B", "andar": "1", "capacidade": 100, "ocupantes": 0}
+local = {"id_local": "2", "complexo": "UFG", "predio": "CA-A", "andar": "2", "capacidade": 10, "ocupantes": 0}
 r.hmset("local:"+local['complexo']+":"+local['predio']+":"+local['andar'],local)
-local = {"id_local": "3", "complexo": "UFG", "predio": "CA-C", "andar": "1", "capacidade": 100, "ocupantes": 0}
+local = {"id_local": "3", "complexo": "UFG", "predio": "CA-A", "andar": "3", "capacidade": 10, "ocupantes": 0}
+r.hmset("local:"+local['complexo']+":"+local['predio']+":"+local['andar'],local)
+local = {"id_local": "4", "complexo": "UFG", "predio": "CA-B", "andar": "1", "capacidade": 10, "ocupantes": 0}
+r.hmset("local:"+local['complexo']+":"+local['predio']+":"+local['andar'],local)
+local = {"id_local": "5", "complexo": "UFG", "predio": "CA-B", "andar": "2", "capacidade": 10, "ocupantes": 0}
+r.hmset("local:"+local['complexo']+":"+local['predio']+":"+local['andar'],local)
+local = {"id_local": "6", "complexo": "UFG", "predio": "CA-B", "andar": "3", "capacidade": 10, "ocupantes": 0}
+r.hmset("local:"+local['complexo']+":"+local['predio']+":"+local['andar'],local)
+local = {"id_local": "7", "complexo": "UFG", "predio": "CA-C", "andar": "1", "capacidade": 10, "ocupantes": 0}
+r.hmset("local:"+local['complexo']+":"+local['predio']+":"+local['andar'],local)
+local = {"id_local": "8", "complexo": "UFG", "predio": "CA-C", "andar": "2", "capacidade": 10, "ocupantes": 0}
+r.hmset("local:"+local['complexo']+":"+local['predio']+":"+local['andar'],local)
+local = {"id_local": "9", "complexo": "UFG", "predio": "CA-C", "andar": "3", "capacidade": 10, "ocupantes": 0}
 r.hmset("local:"+local['complexo']+":"+local['predio']+":"+local['andar'],local)
 
 # instanciando usuários
 user = {"id_matricula": "101", "nome": "Jose Silva", "politica": "1", "complexo": "UFG", "predio": "CA-A", "andar": "1", "ativo": "S"}
 r.hmset("user:" + user ['id_matricula'], user)
-user = {"id_matricula": "103", "nome": "Maria Rodrigues",  "politica": "3", "complexo": "UFG", "predio": "CA-C", "andar": "1", "ativo": "S"}
+user = {"id_matricula": "102", "nome": "Maria Rodrigues",  "politica": "3", "complexo": "UFG", "predio": "CA-C", "andar": "2", "ativo": "S"}
 r.hmset("user:" + user ['id_matricula'], user)
-user = {"id_matricula": "104", "nome": "David Siqueira", "politica": "1",  "complexo": "UFG", "predio": "CA-A", "andar": "1", "ativo": "N"}
+user = {"id_matricula": "103", "nome": "Joana Ferreira",  "politica": "2", "complexo": "UFG", "predio": "CA-C", "andar": "2", "ativo": "S"}
 r.hmset("user:" + user ['id_matricula'], user)
-user = {"id_matricula": "105",  "nome": "David Siqueira", "politica": "3", "complexo": "UFG",  "predio": "CA-A", "andar": "1", "ativo": "S"}
+user = {"id_matricula": "104", "nome": "Carlos Mendes Siqueira",  "politica": "3", "complexo": "UFG", "predio": "CA-C", "andar": "3", "ativo": "S"}
+r.hmset("user:" + user ['id_matricula'], user)
+user = {"id_matricula": "105", "nome": "Pedro Joaquim", "politica": "1",  "complexo": "UFG", "predio": "CA-B", "andar": "1", "ativo": "N"}
+r.hmset("user:" + user ['id_matricula'], user)
+user = {"id_matricula": "106",  "nome": "Severino Mendes", "politica": "3", "complexo": "UFG",  "predio": "CA-B", "andar": "2", "ativo": "S"}
+r.hmset("user:" + user ['id_matricula'], user)
+user = {"id_matricula": "107",  "nome": "Rosana Pereira Costa", "politica": "3", "complexo": "UFG",  "predio": "CA-A", "andar": "2", "ativo": "S"}
+r.hmset("user:" + user ['id_matricula'], user)
+user = {"id_matricula": "108",  "nome": "Joao Rocha", "politica": "3", "complexo": "UFG",  "predio": "CA-C", "andar": "1", "ativo": "S"}
+r.hmset("user:" + user ['id_matricula'], user)
+user = {"id_matricula": "109",  "nome": "Eduardo Costa", "politica": "3", "complexo": "UFG",  "predio": "CA-C", "andar": "1", "ativo": "S"}
+r.hmset("user:" + user ['id_matricula'], user)
+user = {"id_matricula": "110",  "nome": "Roberta Teixeira", "politica": "3", "complexo": "UFG",  "predio": "CA-C", "andar": "1", "ativo": "S"}
 r.hmset("user:" + user ['id_matricula'], user)
 
 # instanciando políticas
