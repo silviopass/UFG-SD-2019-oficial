@@ -1,7 +1,7 @@
 {
 	"config":		
 		{
-			"broker": "127.0.0.1",
+			"broker": "test.mosquitto.org",
 			"tpc_base": "catracas_portas",
 			"local1": "UFG",
 			"local2": "CA-A",
